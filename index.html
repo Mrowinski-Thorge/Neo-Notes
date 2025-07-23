@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeoDev Notes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      color: #333;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      cursor: pointer;
+      background: #007aff;
+      color: #fff;
+      border: none;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #0056d2;
+    }
+    .hidden { display: none; }
+    .note {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 10px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .note button {
+      background: #ff3b30;
+      margin-top: 6px;
+    }
+    .auth-section, .notes-section {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📝 NeoDev Notes</h1>
+
+  <!-- 🔐 Auth UI -->
+  <div id="authSection" class="auth-section">
+    <h2>Anmelden oder Registrieren</h2>
+    <input type="email" id="email" placeholder="E-Mail" />
+    <input type="password" id="password" placeholder="Passwort" />
+    <button id="signUpBtn">Registrieren</button>
+    <button id="signInBtn">Einloggen</button>
+    <button id="googleBtn">Mit Google anmelden</button>
+  </div>
+
+  <!-- 📒 Notes UI -->
+  <div id="notesSection" class="notes-section hidden">
+    <h2>Deine Notizen</h2>
+    <button id="logoutBtn">Logout</button>
+    <textarea id="noteContent" placeholder="Neue Notiz eingeben..."></textarea>
+    <button id="saveNoteBtn">Notiz speichern</button>
+    <div id="notesList"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8YAkuX6ZlcAEr-5peb_D8fclnsM4Y11o",
+      authDomain: "neodev-notes.firebaseapp.com",
+      projectId: "neodev-notes",
+      storageBucket: "neodev-notes.firebasestorage.app",
+      messagingSenderId: "271163999689",
+      appId: "1:271163999689:web:4e7f1fb206bee80702d418",
+      measurementId: "G-92MHTP7HMB"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const authSection = document.getElementById('authSection');
+    const notesSection = document.getElementById('notesSection');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const signUpBtn = document.getElementById('signUpBtn');
+    const signInBtn = document.getElementById('signInBtn');
+    const googleBtn = document.getElementById('googleBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const saveNoteBtn = document.getElementById('saveNoteBtn');
+    const noteContent = document.getElementById('noteContent');
+    const notesList = document.getElementById('notesList');
+
+    let unsubscribeNotes = null;
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        authSection.classList.add('hidden');
+        notesSection.classList.remove('hidden');
+        loadNotes(user.uid);
+      } else {
+        authSection.classList.remove('hidden');
+        notesSection.classList.add('hidden');
+        notesList.innerHTML = '';
+        if (unsubscribeNotes) unsubscribeNotes();
+      }
+    });
+
+    signUpBtn.onclick = () => {
+      createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
+        .catch(err => alert(err.message));
+    };
+    signInBtn.onclick = () => {
+      signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
+        .catch(err => alert(err.message));
+    };
+    googleBtn.onclick = () => {
+      const provider = new GoogleAuthProvider();
+      signInWithPopup(auth, provider).catch(err => alert(err.message));
+    };
+    logoutBtn.onclick = () => { signOut(auth); };
+    saveNoteBtn.onclick = async () => {
+      const user = auth.currentUser;
+      if (!user) return alert("Nicht eingeloggt!");
+      const text = noteContent.value.trim();
+      if (!text) return;
+      await addDoc(collection(db, `users/${user.uid}/notes`), {
+        content: text,
+        createdAt: new Date()
+      });
+      noteContent.value = '';
+    };
+
+    function loadNotes(uid) {
+      if (unsubscribeNotes) unsubscribeNotes();
+      const notesRef = collection(db, `users/${uid}/notes`);
+      unsubscribeNotes = onSnapshot(notesRef, (snapshot) => {
+        notesList.innerHTML = '';
+        snapshot.forEach(docSnap => {
+          const note = docSnap.data();
+          const div = document.createElement('div');
+          div.className = 'note';
+          div.innerHTML = `<p>${note.content}</p><button>Löschen</button>`;
+          div.querySelector('button').onclick = () => {
+            deleteDoc(doc(db, `users/${uid}/notes/${docSnap.id}`));
+          };
+          notesList.appendChild(div);
+        });
+      });
+    }
+  </script>
+
+  <!-- ✅ Hier der geforderte Einbindungsblock für schnelles Setup -->
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics-compat.js"></script>
+  <!-- Du könntest hier auch firebase-auth-compat.js, firebase-firestore-compat.js einfügen,
+       wenn du nicht mit type="module" arbeitest. -->
+  <script>
+    // OPTIONAL: Analytics initialisieren
+    const appCheckConfig = {
+      apiKey: "AIzaSyD8YAkuX6ZlcAEr-5peb_D8fclnsM4Y11o",
+      authDomain: "neodev-notes.firebaseapp.com",
+      projectId: "neodev-notes",
+      storageBucket: "neodev-notes.firebasestorage.app",
+      messagingSenderId: "271163999689",
+      appId: "1:271163999689:web:4e7f1fb206bee80702d418",
+      measurementId: "G-92MHTP7HMB"
+    };
+    firebase.initializeApp(appCheckConfig);
+    if (typeof firebase.analytics === 'function') {
+      firebase.analytics();
+    }
+  </script>
+</body>
+</html>
