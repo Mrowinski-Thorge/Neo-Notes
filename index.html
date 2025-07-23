@@ -4,7 +4,112 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Neo Notes</title>
-  <link rel="stylesheet" href="styles.css" />
+
+  <!-- FontAwesome für Icons -->
+  <script src="https://kit.fontawesome.com/YOUR-KIT-ID.js" crossorigin="anonymous"></script>
+
+  <!-- Inline CSS -->
+  <style>
+    :root {
+      --bg: #fff; --fg: #222; --card-bg: #fafafa;
+      --accent: #007aff; --input-bg: #fff;
+      --input-border: #ccc; --shadow: rgba(0,0,0,0.1);
+    }
+    [data-theme="dark"] {
+      --bg: #1e1e1e; --fg: #eee; --card-bg: #2a2a2a;
+      --accent: #0a84ff; --input-bg: #333;
+      --input-border: #444; --shadow: rgba(0,0,0,0.5);
+    }
+    * { box-sizing: border-box; margin:0; padding:0; font-family:sans-serif; }
+    body {
+      background: var(--bg); color: var(--fg);
+      height:100vh; overflow:hidden;
+    }
+    .modal {
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,0.4);
+    }
+    .modal.hidden { display:none; }
+    .modal-container {
+      position:relative; background:var(--card-bg);
+      border-radius:12px; padding:2rem; width:320px;
+      box-shadow:0 4px 16px var(--shadow);
+    }
+    .modal-close {
+      position:absolute; top:8px; right:8px;
+      background:none; border:none; font-size:1.2rem;
+      cursor:pointer;
+    }
+    .social-btns button {
+      width:100%; margin:0.5rem 0;
+      padding:0.7rem; border:1px solid var(--input-border);
+      border-radius:999px; background:var(--bg);
+      cursor:pointer;
+    }
+    .separator {
+      display:flex; align-items:center; text-align:center;
+      margin:1rem 0;
+    }
+    .separator::before, .separator::after {
+      content:""; flex:1; height:1px; background:var(--input-border);
+    }
+    .separator span { margin:0 0.5rem; color:var(--input-border); }
+    #authForm input {
+      width:100%; margin:0.5rem 0; padding:0.6rem;
+      border:1px solid var(--input-border);
+      border-radius:6px; background:var(--input-bg);
+      color:var(--fg);
+    }
+    .pwd-wrapper { position:relative; }
+    .pwd-toggle {
+      position:absolute; top:50%; right:0.6rem;
+      transform:translateY(-50%); background:none;
+      border:none; cursor:pointer;
+    }
+    .forgot {
+      display:block; text-align:right;
+      margin:0.3rem 0; font-size:0.9rem;
+      color: var(--accent); text-decoration:none;
+    }
+    .primary-btn {
+      width:100%; padding:0.7rem; margin-top:0.8rem;
+      border:none; border-radius:6px;
+      background:var(--accent); color:#fff;
+      cursor:pointer; font-weight:bold;
+    }
+    .theme-toggle {
+      position:absolute; bottom:0.8rem; right:0.8rem;
+      background:none; border:none; cursor:pointer;
+      font-size:1.2rem;
+    }
+    .hidden { display:none; }
+    .toolbar {
+      display:flex; align-items:center; gap:0.5rem;
+      padding:0.5rem; background:var(--card-bg);
+      box-shadow:0 1px 4px var(--shadow);
+    }
+    .notes-list {
+      position:absolute; top:3.5rem; left:0; bottom:0;
+      width:200px; overflow-y:auto; background:var(--card-bg);
+      padding:1rem;
+    }
+    .note-item {
+      padding:0.6rem; margin-bottom:0.5rem;
+      border-radius:6px; cursor:pointer;
+    }
+    .note-item.active {
+      background:var(--accent); color:#fff;
+    }
+    .editor {
+      position:absolute; top:3.5rem; left:200px;
+      right:0; bottom:0; padding:1rem; overflow-y:auto;
+    }
+    .editor:empty::before {
+      content:attr(data-placeholder);
+      color:var(--input-border);
+    }
+  </style>
 </head>
 <body>
   <!-- Onboarding Modal -->
@@ -53,11 +158,172 @@
     <main id="editor" class="editor" contenteditable="true" data-placeholder="Type your note…"></main>
   </div>
 
-  <!-- Firebase SDK & Icons -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js" type="module"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js" type="module"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" type="module"></script>
-  <script src="https://kit.fontawesome.com/<YOUR-KIT-ID>.js" crossorigin="anonymous"></script>
-  <script type="module" src="script.js"></script>
+  <!-- Inline JS (Firebase Auth & Firestore) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import {
+      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      signInWithPopup, GoogleAuthProvider, OAuthProvider,
+      onAuthStateChanged, sendPasswordResetEmail, signOut
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, addDoc, onSnapshot,
+      updateDoc, deleteDoc, serverTimestamp, enableIndexedDbPersistence
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // ▶️ Deine Firebase‑Config hier einfügen:
+    const firebaseConfig = {
+      apiKey: "API_KEY",
+      authDomain: "PROJECT_ID.firebaseapp.com",
+      projectId: "PROJECT_ID",
+      storageBucket: "PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    enableIndexedDbPersistence(db).catch(e=>console.warn(e.code));
+
+    // UI‑Refs
+    const onboarding   = document.getElementById('onboarding');
+    const appContainer = document.getElementById('app');
+    const notesList    = document.getElementById('notesList');
+    const editor       = document.getElementById('editor');
+    const authForm     = document.getElementById('authForm');
+    const submitBtn    = document.getElementById('submitBtn');
+    const formTitle    = document.getElementById('formTitle');
+    const formSwitch   = document.getElementById('formSwitchText');
+
+    let isSignup=false, notes=[], activeId=null;
+
+    // Auth‑State
+    onAuthStateChanged(auth, user=>{
+      if(user){
+        onboarding.classList.add('hidden');
+        appContainer.classList.remove('hidden');
+        initNotesListener(user.uid);
+      } else {
+        onboarding.classList.remove('hidden');
+        appContainer.classList.add('hidden');
+      }
+    });
+
+    // Email/Passwort & Signup/Login
+    async function handleAuth(e){
+      e.preventDefault();
+      const email=authForm.email.value, pw=authForm.password.value;
+      try{
+        if(isSignup) await createUserWithEmailAndPassword(auth,email,pw);
+        else        await signInWithEmailAndPassword(auth,email,pw);
+      }catch(err){ alert(`Auth‑Error: ${err.message}`); }
+    }
+    function toggleSignup(){
+      isSignup=!isSignup;
+      formTitle.textContent= isSignup?'Sign up':'Log in';
+      submitBtn.textContent= isSignup?'Sign up':'Log in';
+      formSwitch.innerHTML= isSignup
+        ? 'Already have an account? <a href="#" onclick="toggleSignup()">Log in</a>'
+        : 'Don’t have an account? <a href="#" onclick="toggleSignup()">Sign up</a>';
+    }
+    function forgotPassword(){
+      const email=authForm.email.value;
+      if(!email) return alert('Bitte E‑Mail eingeben!');
+      sendPasswordResetEmail(auth,email)
+        .then(()=>alert('Reset‑Mail gesendet!'))
+        .catch(err=>alert(err.message));
+    }
+
+    // Google & Apple Login
+    function signInWithGoogle(){
+      const p=new GoogleAuthProvider();
+      signInWithPopup(auth,p).catch(e=>alert(e.message));
+    }
+    async function signInWithApple(){
+      try{
+        const p=new OAuthProvider('apple.com');
+        p.addScope('email'); p.addScope('name');
+        p.setCustomParameters({prompt:'select_account'});
+        await signInWithPopup(auth,p);
+      }catch(e){ alert(e.message); }
+    }
+    function signOut(){
+      signOut(auth);
+    }
+
+    // Firestore‑Listener & CRUD
+    function initNotesListener(uid){
+      const col=collection(db,`users/${uid}/notes`);
+      onSnapshot(col,snap=>{
+        notes=snap.docs.map(d=>({id:d.id,...d.data()}));
+        renderNotes();
+      });
+    }
+    async function newNote(){
+      if(!auth.currentUser) return;
+      await addDoc(collection(db,`users/${auth.currentUser.uid}/notes`),{
+        content:'', createdAt:serverTimestamp(), updatedAt:serverTimestamp()
+      });
+    }
+    function renderNotes(){
+      notesList.innerHTML='';
+      notes.sort((a,b)=>b.createdAt?.toMillis()-a.createdAt?.toMillis())
+        .forEach(n=>{
+          const d=document.createElement('div');
+          d.className='note-item'+(n.id===activeId?' active':'');
+          d.textContent=(n.content.replace(/<[^>]+>/g,'').slice(0,20)||'Neue Notiz');
+          d.onclick=()=>selectNote(n.id);
+          notesList.appendChild(d);
+        });
+    }
+    async function selectNote(id){
+      activeId=id;
+      editor.innerHTML=notes.find(n=>n.id===id).content;
+      renderNotes();
+    }
+    async function saveCurrent(){
+      if(!activeId||!auth.currentUser) return;
+      await updateDoc(
+        doc(db,`users/${auth.currentUser.uid}/notes/${activeId}`),
+        {content:editor.innerHTML, updatedAt:serverTimestamp()}
+      );
+    }
+    async function deleteCurrent(){
+      if(!activeId||!auth.currentUser) return;
+      await deleteDoc(doc(db,`users/${auth.currentUser.uid}/notes/${activeId}`));
+      activeId=null;
+    }
+
+    // Rich‑Text & Helpers
+    function format(cmd){ document.execCommand(cmd,false,null); saveCurrent(); }
+    function insertChecklist(){
+      document.execCommand('insertHTML',false,'<div contenteditable="false">☐  </div>');
+      saveCurrent();
+    }
+    function attachImage(){
+      const url=prompt('Image URL');
+      if(url){ document.execCommand('insertImage',false,url); saveCurrent(); }
+    }
+    editor.addEventListener('input',saveCurrent);
+    function searchNotes(q){
+      Array.from(notesList.children).forEach(item=>
+        item.style.display=item.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'
+      );
+    }
+    function closeOnboarding(){
+      onboarding.classList.add('hidden');
+      appContainer.classList.remove('hidden');
+    }
+    function toggleTheme(){
+      const h=document.documentElement;
+      h.dataset.theme=h.dataset.theme==='light'?'dark':'light';
+    }
+    function togglePassword(){
+      const pw=document.getElementById('password'),
+            btn=document.querySelector('.pwd-toggle');
+      if(pw.type==='password'){ pw.type='text'; btn.textContent='Hide'; }
+      else                   { pw.type='password'; btn.textContent='Show'; }
+    }
+  </script>
 </body>
 </html>
