@@ -15,43 +15,24 @@
     }
     h1, h2 { text-align: center; }
     input, textarea, button {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
+      width: 100%; padding: 10px; margin: 8px 0;
+      font-size: 16px; border-radius: 6px;
+      border: 1px solid #ccc; box-sizing: border-box;
     }
-    button {
-      cursor: pointer;
-      background: #007aff;
-      color: #fff;
-      border: none;
-      font-weight: bold;
-    }
+    button { cursor: pointer; background: #007aff; color: #fff; border: none; font-weight: bold; }
     button:hover { background: #0056d2; }
     .hidden { display: none; }
     .note {
-      background: #fff;
-      border-radius: 8px;
-      padding: 10px;
-      margin: 10px 0;
+      background: #fff; border-radius: 8px; padding: 10px; margin: 10px 0;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .note button {
-      background: #ff3b30;
-      margin-top: 6px;
-    }
-    .auth-section, .notes-section, .verify-section {
+    .note button { background: #ff3b30; margin-top: 6px; }
+    .auth-section, .notes-section, .verify-section, .phone-section {
       margin-top: 20px;
     }
     .verify-section {
-      text-align: center;
-      background: #fff3cd;
-      border: 1px solid #ffeeba;
-      border-radius: 8px;
-      padding: 20px;
+      text-align: center; background: #fff3cd;
+      border: 1px solid #ffeeba; border-radius: 8px; padding: 20px;
     }
   </style>
 </head>
@@ -66,6 +47,10 @@
     <button id="signUpBtn">Registrieren</button>
     <button id="signInBtn">Einloggen</button>
     <button id="googleBtn">Mit Google anmelden</button>
+
+    <h3>🔑 Passwort zurücksetzen</h3>
+    <input type="email" id="resetEmail" placeholder="E-Mail für Reset" />
+    <button id="resetBtn">Passwort zurücksetzen</button>
   </div>
 
   <!-- ✉️ Hinweis zur Verifizierung -->
@@ -74,6 +59,16 @@
     <p>Wir haben dir eine Bestätigungs‑Mail geschickt. Erst nach der Bestätigung kannst du deine Notizen nutzen.</p>
     <button id="resendBtn">Bestätigungsmail erneut senden</button>
     <button id="logoutBtn2">Logout</button>
+  </div>
+
+  <!-- 📱 Telefon-Login -->
+  <div id="phoneSection" class="phone-section">
+    <h2>Oder mit Telefonnummer anmelden</h2>
+    <input type="text" id="phoneNumber" placeholder="+49 170 1234567" />
+    <div id="recaptcha-container"></div>
+    <button id="phoneLoginBtn">SMS-Code anfordern</button>
+    <input type="text" id="smsCode" placeholder="SMS-Code eingeben" />
+    <button id="confirmCodeBtn">Code bestätigen</button>
   </div>
 
   <!-- 📒 Notes UI -->
@@ -86,10 +81,31 @@
   </div>
 
   <script type="module">
+    // ===== Firebase SDK =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      GoogleAuthProvider,
+      signInWithPopup,
+      onAuthStateChanged,
+      signOut,
+      sendEmailVerification,
+      sendPasswordResetEmail,
+      RecaptchaVerifier,
+      signInWithPhoneNumber
+    } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      onSnapshot,
+      deleteDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
+    // ===== Firebase Config =====
     const firebaseConfig = {
       apiKey: "AIzaSyD8YAkuX6ZlcAEr-5peb_D8fclnsM4Y11o",
       authDomain: "neodev-notes.firebaseapp.com",
@@ -99,14 +115,14 @@
       appId: "1:271163999689:web:4e7f1fb206bee80702d418",
       measurementId: "G-92MHTP7HMB"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // ===== UI Elemente =====
     const authSection = document.getElementById('authSection');
-    const notesSection = document.getElementById('notesSection');
     const verifySection = document.getElementById('verifySection');
+    const notesSection = document.getElementById('notesSection');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const signUpBtn = document.getElementById('signUpBtn');
@@ -118,18 +134,27 @@
     const saveNoteBtn = document.getElementById('saveNoteBtn');
     const noteContent = document.getElementById('noteContent');
     const notesList = document.getElementById('notesList');
+    const resetEmail = document.getElementById('resetEmail');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Phone UI
+    const phoneNumberInput = document.getElementById('phoneNumber');
+    const phoneLoginBtn = document.getElementById('phoneLoginBtn');
+    const smsCodeInput = document.getElementById('smsCode');
+    const confirmCodeBtn = document.getElementById('confirmCodeBtn');
 
     let unsubscribeNotes = null;
+    let confirmationResultGlobal = null;
 
+    // ===== Auth State =====
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        if (user.emailVerified) {
+        if (user.emailVerified || user.phoneNumber) {
           authSection.classList.add('hidden');
           verifySection.classList.add('hidden');
           notesSection.classList.remove('hidden');
           loadNotes(user.uid);
         } else {
-          // Eingeloggt, aber nicht verifiziert
           authSection.classList.add('hidden');
           notesSection.classList.add('hidden');
           verifySection.classList.remove('hidden');
@@ -143,12 +168,14 @@
       }
     });
 
+    // ===== Email/Passwort =====
     signUpBtn.onclick = () => {
       createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
         .then((cred) => {
-          sendEmailVerification(cred.user)
-            .then(() => alert("Bestätigungs‑Mail gesendet. Bitte Postfach prüfen!"));
-          signOut(auth);
+          sendEmailVerification(cred.user).then(() => {
+            alert("Bestätigungs‑Mail gesendet! Bitte Postfach prüfen.");
+            signOut(auth);
+          });
         })
         .catch(err => alert(err.message));
     };
@@ -169,14 +196,25 @@
     resendBtn.onclick = () => {
       const user = auth.currentUser;
       if (user && !user.emailVerified) {
-        sendEmailVerification(user)
-          .then(() => alert("Bestätigungs‑Mail erneut gesendet!"));
+        sendEmailVerification(user).then(() => {
+          alert("Bestätigungs‑Mail erneut gesendet!");
+        });
       }
     };
 
+    // ===== Passwort-Reset =====
+    resetBtn.onclick = () => {
+      const email = resetEmail.value.trim();
+      if (!email) return alert("Bitte E-Mail eingeben!");
+      sendPasswordResetEmail(auth, email)
+        .then(() => alert("Reset-Mail gesendet!"))
+        .catch(err => alert(err.message));
+    };
+
+    // ===== Notes =====
     saveNoteBtn.onclick = async () => {
       const user = auth.currentUser;
-      if (!user || !user.emailVerified) return alert("Erst verifizieren!");
+      if (!user || (!user.emailVerified && !user.phoneNumber)) return alert("Zuerst verifizieren!");
       const text = noteContent.value.trim();
       if (!text) return;
       await addDoc(collection(db, `users/${user.uid}/notes`), {
@@ -203,6 +241,38 @@
         });
       });
     }
+
+    // ===== Phone Auth =====
+    // reCAPTCHA
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'phoneLoginBtn', {
+      'size': 'invisible',
+      'callback': (response) => { /* ok */ },
+      'expired-callback': () => { alert("reCAPTCHA abgelaufen. Erneut versuchen."); }
+    });
+
+    phoneLoginBtn.onclick = () => {
+      const phoneNumber = phoneNumberInput.value.trim();
+      signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
+        .then((confirmationResult) => {
+          confirmationResultGlobal = confirmationResult;
+          alert("SMS gesendet! Bitte Code eingeben.");
+        })
+        .catch((error) => {
+          alert("Fehler: " + error.message);
+        });
+    };
+
+    confirmCodeBtn.onclick = () => {
+      const code = smsCodeInput.value.trim();
+      if (!confirmationResultGlobal) return alert("Erst SMS-Code anfordern!");
+      confirmationResultGlobal.confirm(code)
+        .then((result) => {
+          alert("Telefonnummer verifiziert: " + result.user.phoneNumber);
+        })
+        .catch((error) => {
+          alert("Code ungültig: " + error.message);
+        });
+    };
   </script>
 </body>
 </html>
