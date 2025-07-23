@@ -13,9 +13,7 @@
       margin: 0 auto;
       padding: 20px;
     }
-    h1, h2 {
-      text-align: center;
-    }
+    h1, h2 { text-align: center; }
     input, textarea, button {
       width: 100%;
       padding: 10px;
@@ -32,9 +30,7 @@
       border: none;
       font-weight: bold;
     }
-    button:hover {
-      background: #0056d2;
-    }
+    button:hover { background: #0056d2; }
     .hidden { display: none; }
     .note {
       background: #fff;
@@ -47,8 +43,15 @@
       background: #ff3b30;
       margin-top: 6px;
     }
-    .auth-section, .notes-section {
+    .auth-section, .notes-section, .verify-section {
       margin-top: 20px;
+    }
+    .verify-section {
+      text-align: center;
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      border-radius: 8px;
+      padding: 20px;
     }
   </style>
 </head>
@@ -65,6 +68,14 @@
     <button id="googleBtn">Mit Google anmelden</button>
   </div>
 
+  <!-- ✉️ Hinweis zur Verifizierung -->
+  <div id="verifySection" class="verify-section hidden">
+    <h2>Bitte bestätige deine E‑Mail‑Adresse</h2>
+    <p>Wir haben dir eine Bestätigungs‑Mail geschickt. Erst nach der Bestätigung kannst du deine Notizen nutzen.</p>
+    <button id="resendBtn">Bestätigungsmail erneut senden</button>
+    <button id="logoutBtn2">Logout</button>
+  </div>
+
   <!-- 📒 Notes UI -->
   <div id="notesSection" class="notes-section hidden">
     <h2>Deine Notizen</h2>
@@ -76,7 +87,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -95,12 +106,15 @@
 
     const authSection = document.getElementById('authSection');
     const notesSection = document.getElementById('notesSection');
+    const verifySection = document.getElementById('verifySection');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const signUpBtn = document.getElementById('signUpBtn');
     const signInBtn = document.getElementById('signInBtn');
     const googleBtn = document.getElementById('googleBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    const logoutBtn2 = document.getElementById('logoutBtn2');
+    const resendBtn = document.getElementById('resendBtn');
     const saveNoteBtn = document.getElementById('saveNoteBtn');
     const noteContent = document.getElementById('noteContent');
     const notesList = document.getElementById('notesList');
@@ -109,12 +123,21 @@
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        authSection.classList.add('hidden');
-        notesSection.classList.remove('hidden');
-        loadNotes(user.uid);
+        if (user.emailVerified) {
+          authSection.classList.add('hidden');
+          verifySection.classList.add('hidden');
+          notesSection.classList.remove('hidden');
+          loadNotes(user.uid);
+        } else {
+          // Eingeloggt, aber nicht verifiziert
+          authSection.classList.add('hidden');
+          notesSection.classList.add('hidden');
+          verifySection.classList.remove('hidden');
+        }
       } else {
         authSection.classList.remove('hidden');
         notesSection.classList.add('hidden');
+        verifySection.classList.add('hidden');
         notesList.innerHTML = '';
         if (unsubscribeNotes) unsubscribeNotes();
       }
@@ -122,20 +145,38 @@
 
     signUpBtn.onclick = () => {
       createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
+        .then((cred) => {
+          sendEmailVerification(cred.user)
+            .then(() => alert("Bestätigungs‑Mail gesendet. Bitte Postfach prüfen!"));
+          signOut(auth);
+        })
         .catch(err => alert(err.message));
     };
+
     signInBtn.onclick = () => {
       signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
         .catch(err => alert(err.message));
     };
+
     googleBtn.onclick = () => {
       const provider = new GoogleAuthProvider();
       signInWithPopup(auth, provider).catch(err => alert(err.message));
     };
-    logoutBtn.onclick = () => { signOut(auth); };
+
+    logoutBtn.onclick = () => signOut(auth);
+    logoutBtn2.onclick = () => signOut(auth);
+
+    resendBtn.onclick = () => {
+      const user = auth.currentUser;
+      if (user && !user.emailVerified) {
+        sendEmailVerification(user)
+          .then(() => alert("Bestätigungs‑Mail erneut gesendet!"));
+      }
+    };
+
     saveNoteBtn.onclick = async () => {
       const user = auth.currentUser;
-      if (!user) return alert("Nicht eingeloggt!");
+      if (!user || !user.emailVerified) return alert("Erst verifizieren!");
       const text = noteContent.value.trim();
       if (!text) return;
       await addDoc(collection(db, `users/${user.uid}/notes`), {
@@ -161,28 +202,6 @@
           notesList.appendChild(div);
         });
       });
-    }
-  </script>
-
-  <!-- ✅ Hier der geforderte Einbindungsblock für schnelles Setup -->
-  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics-compat.js"></script>
-  <!-- Du könntest hier auch firebase-auth-compat.js, firebase-firestore-compat.js einfügen,
-       wenn du nicht mit type="module" arbeitest. -->
-  <script>
-    // OPTIONAL: Analytics initialisieren
-    const appCheckConfig = {
-      apiKey: "AIzaSyD8YAkuX6ZlcAEr-5peb_D8fclnsM4Y11o",
-      authDomain: "neodev-notes.firebaseapp.com",
-      projectId: "neodev-notes",
-      storageBucket: "neodev-notes.firebasestorage.app",
-      messagingSenderId: "271163999689",
-      appId: "1:271163999689:web:4e7f1fb206bee80702d418",
-      measurementId: "G-92MHTP7HMB"
-    };
-    firebase.initializeApp(appCheckConfig);
-    if (typeof firebase.analytics === 'function') {
-      firebase.analytics();
     }
   </script>
 </body>
