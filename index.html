@@ -1,278 +1,219 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NeoDev Notes</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f9fc;
-      color: #333;
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1, h2 { text-align: center; }
-    input, textarea, button {
-      width: 100%; padding: 10px; margin: 8px 0;
-      font-size: 16px; border-radius: 6px;
-      border: 1px solid #ccc; box-sizing: border-box;
-    }
-    button { cursor: pointer; background: #007aff; color: #fff; border: none; font-weight: bold; }
-    button:hover { background: #0056d2; }
-    .hidden { display: none; }
-    .note {
-      background: #fff; border-radius: 8px; padding: 10px; margin: 10px 0;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .note button { background: #ff3b30; margin-top: 6px; }
-    .auth-section, .notes-section, .verify-section, .phone-section {
-      margin-top: 20px;
-    }
-    .verify-section {
-      text-align: center; background: #fff3cd;
-      border: 1px solid #ffeeba; border-radius: 8px; padding: 20px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NeoDev Notes</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(180deg,#f9f9f9,#eaeaea);
+    margin:0; padding:0;
+  }
+  .container {
+    max-width:420px; margin:50px auto; background:#fff;
+    border-radius:20px; padding:30px; box-shadow:0 10px 30px rgba(0,0,0,0.1);
+  }
+  h1 {text-align:center;font-weight:700;font-size:1.8em;margin-bottom:30px;}
+  h2 {margin-top:20px;font-size:1.3em;}
+  input,textarea {
+    width:100%;padding:12px;border-radius:12px;border:1px solid #ccc;
+    margin:10px 0;font-size:16px;outline:none;transition:border 0.3s;
+  }
+  input:focus,textarea:focus {border:1px solid #007aff;}
+  button {
+    width:100%;padding:12px;margin:8px 0;font-size:16px;border:none;
+    border-radius:12px;cursor:pointer;font-weight:600;transition:all 0.3s;
+  }
+  .primary-btn {background:#007aff;color:#fff;}
+  .primary-btn:hover {background:#0056d2;}
+  .secondary-btn {background:#f2f2f2;color:#333;}
+  .secondary-btn:hover {background:#e0e0e0;}
+  .note-card {
+    background:#f8f8f8;border-radius:12px;padding:12px;margin:8px 0;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .note-card h3 {margin:0;font-size:1em;font-weight:600;}
+  .note-card p {margin:0;font-size:0.9em;color:#666;}
+  .note-card button {
+    background:#ff3b30;color:#fff;width:auto;padding:6px 12px;
+  }
+  .hidden{display:none;}
+  .small-link{
+    display:block;text-align:right;font-size:0.9em;margin-top:4px;
+    color:#007aff;cursor:pointer;text-decoration:underline;
+  }
+  .center{text-align:center;}
+  .title-input {font-weight:600;}
+</style>
 </head>
 <body>
-  <h1>📝 NeoDev Notes</h1>
+<div class="container" id="authContainer">
+  <h1>NeoDev Notes</h1>
+  <input id="email" type="email" placeholder="E‑Mail">
+  <input id="password" type="password" placeholder="Passwort">
+  <button id="signInBtn" class="primary-btn">Anmelden</button>
+  <button id="signUpBtn" class="secondary-btn">Registrieren</button>
+  <div class="small-link" id="resetBtn">Passwort vergessen?</div>
+  <hr style="margin:20px 0;">
+  <button id="googleBtn" class="secondary-btn">Mit Google anmelden</button>
+  <hr style="margin:20px 0;">
+  <input id="phoneNumber" type="text" placeholder="📱 +49 170 1234567">
+  <button id="phoneLoginBtn" class="secondary-btn">SMS-Code anfordern</button>
+  <input id="smsCode" type="text" placeholder="SMS‑Code eingeben">
+  <button id="confirmCodeBtn" class="primary-btn">Code bestätigen</button>
+</div>
 
-  <!-- 🔐 Auth UI -->
-  <div id="authSection" class="auth-section">
-    <h2>Anmelden oder Registrieren</h2>
-    <input type="email" id="email" placeholder="E-Mail" />
-    <input type="password" id="password" placeholder="Passwort" />
-    <button id="signUpBtn">Registrieren</button>
-    <button id="signInBtn">Einloggen</button>
-    <button id="googleBtn">Mit Google anmelden</button>
+<div class="container hidden" id="verifyContainer">
+  <h2>📩 Bitte bestätige deine E‑Mail</h2>
+  <p class="center">Wir haben dir eine Bestätigungsmail geschickt.<br>Erst danach kannst du loslegen.</p>
+  <button id="resendBtn" class="secondary-btn">Bestätigungsmail erneut senden</button>
+  <button id="logoutBtn2" class="primary-btn">Logout</button>
+</div>
 
-    <h3>🔑 Passwort zurücksetzen</h3>
-    <input type="email" id="resetEmail" placeholder="E-Mail für Reset" />
-    <button id="resetBtn">Passwort zurücksetzen</button>
-  </div>
+<div class="container hidden" id="notesContainer">
+  <h1>📒 Deine Notizen</h1>
+  <button id="logoutBtn" class="secondary-btn">Logout</button>
+  <h2>Neue Notiz</h2>
+  <input id="noteTitle" class="title-input" type="text" placeholder="Titel">
+  <textarea id="noteContent" rows="3" placeholder="Inhalt..."></textarea>
+  <button id="saveNoteBtn" class="primary-btn">Speichern</button>
+  <h2>Gespeicherte Notizen</h2>
+  <div id="notesList"></div>
+</div>
 
-  <!-- ✉️ Hinweis zur Verifizierung -->
-  <div id="verifySection" class="verify-section hidden">
-    <h2>Bitte bestätige deine E‑Mail‑Adresse</h2>
-    <p>Wir haben dir eine Bestätigungs‑Mail geschickt. Erst nach der Bestätigung kannst du deine Notizen nutzen.</p>
-    <button id="resendBtn">Bestätigungsmail erneut senden</button>
-    <button id="logoutBtn2">Logout</button>
-  </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import {
+  getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,
+  GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut,
+  sendEmailVerification,sendPasswordResetEmail,
+  RecaptchaVerifier,signInWithPhoneNumber
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import {
+  getFirestore,collection,addDoc,onSnapshot,deleteDoc,doc
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-  <!-- 📱 Telefon-Login -->
-  <div id="phoneSection" class="phone-section">
-    <h2>Oder mit Telefonnummer anmelden</h2>
-    <input type="text" id="phoneNumber" placeholder="+49 170 1234567" />
-    <div id="recaptcha-container"></div>
-    <button id="phoneLoginBtn">SMS-Code anfordern</button>
-    <input type="text" id="smsCode" placeholder="SMS-Code eingeben" />
-    <button id="confirmCodeBtn">Code bestätigen</button>
-  </div>
+const app = initializeApp({
+  apiKey:"AIzaSyD8YAkuX6ZlcAEr-5peb_D8fclnsM4Y11o",
+  authDomain:"neodev-notes.firebaseapp.com",
+  projectId:"neodev-notes",
+  storageBucket:"neodev-notes.firebasestorage.app",
+  messagingSenderId:"271163999689",
+  appId:"1:271163999689:web:4e7f1fb206bee80702d418"
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  <!-- 📒 Notes UI -->
-  <div id="notesSection" class="notes-section hidden">
-    <h2>Deine Notizen</h2>
-    <button id="logoutBtn">Logout</button>
-    <textarea id="noteContent" placeholder="Neue Notiz eingeben..."></textarea>
-    <button id="saveNoteBtn">Notiz speichern</button>
-    <div id="notesList"></div>
-  </div>
+// UI refs
+const authContainer=document.getElementById('authContainer');
+const verifyContainer=document.getElementById('verifyContainer');
+const notesContainer=document.getElementById('notesContainer');
+const email=document.getElementById('email');
+const password=document.getElementById('password');
+const signInBtn=document.getElementById('signInBtn');
+const signUpBtn=document.getElementById('signUpBtn');
+const resetBtn=document.getElementById('resetBtn');
+const googleBtn=document.getElementById('googleBtn');
+const logoutBtn=document.getElementById('logoutBtn');
+const logoutBtn2=document.getElementById('logoutBtn2');
+const resendBtn=document.getElementById('resendBtn');
+const noteTitle=document.getElementById('noteTitle');
+const noteContent=document.getElementById('noteContent');
+const saveNoteBtn=document.getElementById('saveNoteBtn');
+const notesList=document.getElementById('notesList');
+const phoneNumber=document.getElementById('phoneNumber');
+const phoneLoginBtn=document.getElementById('phoneLoginBtn');
+const smsCode=document.getElementById('smsCode');
+const confirmCodeBtn=document.getElementById('confirmCodeBtn');
 
-  <script type="module">
-    // ===== Firebase SDK =====
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      GoogleAuthProvider,
-      signInWithPopup,
-      onAuthStateChanged,
-      signOut,
-      sendEmailVerification,
-      sendPasswordResetEmail,
-      RecaptchaVerifier,
-      signInWithPhoneNumber
-    } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      onSnapshot,
-      deleteDoc,
-      doc
-    } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+let unsub=null,confirmationResult=null;
 
-    // ===== Firebase Config =====
-    const firebaseConfig = {
-      apiKey: "AIzaSyD8YAkuX6ZlcAEr-5peb_D8fclnsM4Y11o",
-      authDomain: "neodev-notes.firebaseapp.com",
-      projectId: "neodev-notes",
-      storageBucket: "neodev-notes.firebasestorage.app",
-      messagingSenderId: "271163999689",
-      appId: "1:271163999689:web:4e7f1fb206bee80702d418",
-      measurementId: "G-92MHTP7HMB"
-    };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // ===== UI Elemente =====
-    const authSection = document.getElementById('authSection');
-    const verifySection = document.getElementById('verifySection');
-    const notesSection = document.getElementById('notesSection');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const signUpBtn = document.getElementById('signUpBtn');
-    const signInBtn = document.getElementById('signInBtn');
-    const googleBtn = document.getElementById('googleBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const logoutBtn2 = document.getElementById('logoutBtn2');
-    const resendBtn = document.getElementById('resendBtn');
-    const saveNoteBtn = document.getElementById('saveNoteBtn');
-    const noteContent = document.getElementById('noteContent');
-    const notesList = document.getElementById('notesList');
-    const resetEmail = document.getElementById('resetEmail');
-    const resetBtn = document.getElementById('resetBtn');
-
-    // Phone UI
-    const phoneNumberInput = document.getElementById('phoneNumber');
-    const phoneLoginBtn = document.getElementById('phoneLoginBtn');
-    const smsCodeInput = document.getElementById('smsCode');
-    const confirmCodeBtn = document.getElementById('confirmCodeBtn');
-
-    let unsubscribeNotes = null;
-    let confirmationResultGlobal = null;
-
-    // ===== Auth State =====
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        if (user.emailVerified || user.phoneNumber) {
-          authSection.classList.add('hidden');
-          verifySection.classList.add('hidden');
-          notesSection.classList.remove('hidden');
-          loadNotes(user.uid);
-        } else {
-          authSection.classList.add('hidden');
-          notesSection.classList.add('hidden');
-          verifySection.classList.remove('hidden');
-        }
-      } else {
-        authSection.classList.remove('hidden');
-        notesSection.classList.add('hidden');
-        verifySection.classList.add('hidden');
-        notesList.innerHTML = '';
-        if (unsubscribeNotes) unsubscribeNotes();
-      }
-    });
-
-    // ===== Email/Passwort =====
-    signUpBtn.onclick = () => {
-      createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
-        .then((cred) => {
-          sendEmailVerification(cred.user).then(() => {
-            alert("Bestätigungs‑Mail gesendet! Bitte Postfach prüfen.");
-            signOut(auth);
-          });
-        })
-        .catch(err => alert(err.message));
-    };
-
-    signInBtn.onclick = () => {
-      signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
-        .catch(err => alert(err.message));
-    };
-
-    googleBtn.onclick = () => {
-      const provider = new GoogleAuthProvider();
-      signInWithPopup(auth, provider).catch(err => alert(err.message));
-    };
-
-    logoutBtn.onclick = () => signOut(auth);
-    logoutBtn2.onclick = () => signOut(auth);
-
-    resendBtn.onclick = () => {
-      const user = auth.currentUser;
-      if (user && !user.emailVerified) {
-        sendEmailVerification(user).then(() => {
-          alert("Bestätigungs‑Mail erneut gesendet!");
-        });
-      }
-    };
-
-    // ===== Passwort-Reset =====
-    resetBtn.onclick = () => {
-      const email = resetEmail.value.trim();
-      if (!email) return alert("Bitte E-Mail eingeben!");
-      sendPasswordResetEmail(auth, email)
-        .then(() => alert("Reset-Mail gesendet!"))
-        .catch(err => alert(err.message));
-    };
-
-    // ===== Notes =====
-    saveNoteBtn.onclick = async () => {
-      const user = auth.currentUser;
-      if (!user || (!user.emailVerified && !user.phoneNumber)) return alert("Zuerst verifizieren!");
-      const text = noteContent.value.trim();
-      if (!text) return;
-      await addDoc(collection(db, `users/${user.uid}/notes`), {
-        content: text,
-        createdAt: new Date()
-      });
-      noteContent.value = '';
-    };
-
-    function loadNotes(uid) {
-      if (unsubscribeNotes) unsubscribeNotes();
-      const notesRef = collection(db, `users/${uid}/notes`);
-      unsubscribeNotes = onSnapshot(notesRef, (snapshot) => {
-        notesList.innerHTML = '';
-        snapshot.forEach(docSnap => {
-          const note = docSnap.data();
-          const div = document.createElement('div');
-          div.className = 'note';
-          div.innerHTML = `<p>${note.content}</p><button>Löschen</button>`;
-          div.querySelector('button').onclick = () => {
-            deleteDoc(doc(db, `users/${uid}/notes/${docSnap.id}`));
-          };
-          notesList.appendChild(div);
-        });
-      });
+// Auth State
+onAuthStateChanged(auth,user=>{
+  if(user){
+    if(user.emailVerified || user.phoneNumber){
+      authContainer.classList.add('hidden');
+      verifyContainer.classList.add('hidden');
+      notesContainer.classList.remove('hidden');
+      loadNotes(user.uid);
+    } else {
+      authContainer.classList.add('hidden');
+      notesContainer.classList.add('hidden');
+      verifyContainer.classList.remove('hidden');
     }
+  } else {
+    authContainer.classList.remove('hidden');
+    notesContainer.classList.add('hidden');
+    verifyContainer.classList.add('hidden');
+    notesList.innerHTML='';
+    if(unsub)unsub();
+  }
+});
 
-    // ===== Phone Auth =====
-    // reCAPTCHA
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'phoneLoginBtn', {
-      'size': 'invisible',
-      'callback': (response) => { /* ok */ },
-      'expired-callback': () => { alert("reCAPTCHA abgelaufen. Erneut versuchen."); }
+// Email/Passwort
+signInBtn.onclick=()=>signInWithEmailAndPassword(auth,email.value,password.value).catch(e=>alert(e.message));
+signUpBtn.onclick=()=>{
+  createUserWithEmailAndPassword(auth,email.value,password.value)
+    .then(c=>{
+      sendEmailVerification(c.user).then(()=>{alert("Mail gesendet! Bitte bestätigen.");signOut(auth);});
+    })
+    .catch(e=>alert(e.message));
+};
+resetBtn.onclick=()=>{
+  if(!email.value.trim())return alert("Bitte E-Mail angeben.");
+  sendPasswordResetEmail(auth,email.value.trim())
+    .then(()=>alert("Passwort-Reset-Mail gesendet!"))
+    .catch(e=>alert(e.message));
+};
+googleBtn.onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>alert(e.message));
+logoutBtn.onclick=()=>signOut(auth);
+logoutBtn2.onclick=()=>signOut(auth);
+resendBtn.onclick=()=>{if(auth.currentUser&&!auth.currentUser.emailVerified)sendEmailVerification(auth.currentUser).then(()=>alert("Mail erneut gesendet!"));};
+
+// Notes
+saveNoteBtn.onclick=async()=>{
+  const user=auth.currentUser;
+  if(!user||( !user.emailVerified && !user.phoneNumber))return alert("Nicht verifiziert!");
+  if(!noteTitle.value.trim()||!noteContent.value.trim())return alert("Titel und Inhalt ausfüllen!");
+  await addDoc(collection(db,`users/${user.uid}/notes`),{
+    title:noteTitle.value.trim(),
+    content:noteContent.value.trim(),
+    createdAt:new Date()
+  });
+  noteTitle.value='';noteContent.value='';
+};
+function loadNotes(uid){
+  if(unsub)unsub();
+  unsub=onSnapshot(collection(db,`users/${uid}/notes`),snap=>{
+    notesList.innerHTML='';
+    snap.forEach(docSnap=>{
+      const d=docSnap.data();
+      const div=document.createElement('div');
+      div.className='note-card';
+      div.innerHTML=`<div><h3>${d.title}</h3><p>${d.content}</p></div><button>Löschen</button>`;
+      div.querySelector('button').onclick=()=>deleteDoc(doc(db,`users/${uid}/notes/${docSnap.id}`));
+      notesList.appendChild(div);
     });
+  });
+}
 
-    phoneLoginBtn.onclick = () => {
-      const phoneNumber = phoneNumberInput.value.trim();
-      signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
-        .then((confirmationResult) => {
-          confirmationResultGlobal = confirmationResult;
-          alert("SMS gesendet! Bitte Code eingeben.");
-        })
-        .catch((error) => {
-          alert("Fehler: " + error.message);
-        });
-    };
-
-    confirmCodeBtn.onclick = () => {
-      const code = smsCodeInput.value.trim();
-      if (!confirmationResultGlobal) return alert("Erst SMS-Code anfordern!");
-      confirmationResultGlobal.confirm(code)
-        .then((result) => {
-          alert("Telefonnummer verifiziert: " + result.user.phoneNumber);
-        })
-        .catch((error) => {
-          alert("Code ungültig: " + error.message);
-        });
-    };
-  </script>
+// Phone
+window.recaptchaVerifier=new RecaptchaVerifier(auth,'phoneLoginBtn',{
+  size:'invisible',
+  callback:()=>{}
+});
+phoneLoginBtn.onclick=()=>{
+  signInWithPhoneNumber(auth,phoneNumber.value.trim(),window.recaptchaVerifier)
+    .then(cr=>{confirmationResult=cr;alert("SMS gesendet! Code eingeben.");})
+    .catch(e=>alert(e.message));
+};
+confirmCodeBtn.onclick=()=>{
+  if(!confirmationResult)return alert("Erst SMS anfordern!");
+  confirmationResult.confirm(smsCode.value.trim())
+    .then(()=>alert("Telefonnummer verifiziert!"))
+    .catch(e=>alert(e.message));
+};
+</script>
 </body>
 </html>
