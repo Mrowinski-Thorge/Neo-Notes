@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Neo Notes</title>
+  <title>Neo Notes – Login</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
 
   <!-- Google Fonts & Material Icons -->
@@ -26,135 +26,67 @@
       --shadow-sm:0 1px 2px rgba(0,0,0,0.3);
       --shadow-md:0 4px 6px rgba(0,0,0,0.3),0 2px 4px rgba(0,0,0,0.3);
     }
-    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-    body {
-      font-family:'Inter',sans-serif;
-      background:var(--bg-primary);
-      color:var(--text-primary);
-      height:100vh;
-      overflow:hidden;
-    }
-    .hidden { display:none!important; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--text-primary);height:100vh;overflow:hidden;}
+    .hidden{display:none!important;}
 
     /* Onboarding Modal */
-    .modal {
-      position:fixed; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      background:rgba(0,0,0,0.5); backdrop-filter:blur(8px); z-index:50;
-    }
-    .modal-container {
-      background:var(--bg-primary);
-      border-radius:var(--radius-xl);
-      padding:2rem;
-      max-width:380px; width:90%;
-      box-shadow:var(--shadow-md);
-      border:1px solid var(--border);
-    }
-    .modal h2 { text-align:center; margin-bottom:1rem; font-weight:600; }
-    .form-switch-text { text-align:center; color:var(--text-secondary); margin-bottom:1.5rem; }
-    .form-switch-text a { color:var(--accent); text-decoration:none; }
-    .social-btns { display:flex; flex-direction:column; gap:0.75rem; margin-bottom:1rem; }
-    .social-btn {
-      display:flex; align-items:center; gap:0.5rem;
-      padding:0.75rem; border:1px solid var(--border);
-      border-radius:var(--radius-lg); background:var(--bg-primary);
-      cursor:pointer; transition:all .2s;
-    }
-    .social-btn.google { color:#4285f4; border-color:#4285f4; }
-    .social-btn.google:hover { background:#4285f4; color:#fff; }
-    .separator {
-      display:flex; align-items:center; margin:1.5rem 0; color:var(--text-muted);
-    }
-    .separator::before, .separator::after {
-      content:""; flex:1; height:1px; background:var(--border);
-    }
-    .separator span { margin:0 0.5rem; }
+    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+      background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);z-index:50;}
+    .modal-container{background:var(--bg-primary);border-radius:var(--radius-xl);
+      padding:2rem;max-width:380px;width:90%;box-shadow:var(--shadow-md);border:1px solid var(--border);}
+    .modal h2{text-align:center;margin-bottom:1rem;font-weight:600;}
+    .form-switch-text{text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;}
+    .form-switch-text a{color:var(--accent);text-decoration:none;}
+    .social-btns{display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1rem;}
+    .social-btn{display:flex;align-items:center;gap:0.5rem;padding:0.75rem;border:1px solid var(--border);
+      border-radius:var(--radius-lg);background:var(--bg-primary);cursor:pointer;transition:all .2s;}
+    .social-btn.google{color:#4285f4;border-color:#4285f4;}
+    .social-btn.google:hover{background:#4285f4;color:#fff;}
+    .separator{display:flex;align-items:center;margin:1.5rem 0;color:var(--text-muted);}
+    .separator::before,.separator::after{content:"";flex:1;height:1px;background:var(--border);}
+    .separator span{margin:0 0.5rem;}
 
-    .auth-form { display:flex; flex-direction:column; gap:1rem; }
-    .form-input {
-      padding:0.75rem; border:1px solid var(--border);
-      border-radius:var(--radius-md); background:var(--bg-secondary);
-      color:var(--text-primary);
-    }
-    .form-input:focus {
-      outline:none; border-color:var(--accent);
-    }
-    .pwd-wrapper { position:relative; }
-    .pwd-toggle {
-      position:absolute; top:50%; right:0.75rem; transform:translateY(-50%);
-      background:none; border:none; color:var(--accent); cursor:pointer;
-    }
-    .forgot-link { text-align:right; color:var(--accent); font-size:0.875rem; }
+    .auth-form{display:flex;flex-direction:column;gap:1rem;}
+    .form-input{padding:0.75rem;border:1px solid var(--border);border-radius:var(--radius-md);
+      background:var(--bg-secondary);color:var(--text-primary);}
+    .form-input:focus{outline:none;border-color:var(--accent);}
+    .pwd-wrapper{position:relative;}
+    .pwd-toggle{position:absolute;top:50%;right:0.75rem;transform:translateY(-50%);
+      background:none;border:none;color:var(--accent);cursor:pointer;}
+    .forgot-link{text-align:right;color:var(--accent);font-size:0.875rem;}
 
-    .primary-btn {
-      padding:0.75rem; background:var(--accent); color:#fff;
-      border:none; border-radius:var(--radius-md);
-      cursor:pointer; font-weight:600;
-    }
-    .primary-btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .primary-btn{padding:0.75rem;background:var(--accent);color:#fff;border:none;
+      border-radius:var(--radius-md);cursor:pointer;font-weight:600;}
+    .primary-btn:disabled{opacity:0.6;cursor:not-allowed;}
 
-    .theme-toggle {
-      position:absolute; bottom:1rem; left:1rem;
-      width:40px; height:40px; border-radius:50%;
-      background:var(--bg-secondary); border:1px solid var(--border);
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-    }
+    .theme-toggle{position:absolute;bottom:1rem;left:1rem;width:40px;height:40px;
+      border-radius:50%;background:var(--bg-secondary);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;}
 
-    /* App Layout */
-    .app-container { height:100vh; display:flex; flex-direction:column; }
-    .toolbar {
-      display:flex; align-items:center; gap:0.5rem;
-      padding:0.75rem; background:var(--bg-secondary);
-      border-bottom:1px solid var(--border);
-    }
-    .toolbar-btn {
-      display:flex; align-items:center; gap:0.25rem;
-      padding:0.5rem; border:1px solid var(--border);
-      border-radius:var(--radius-sm); background:var(--bg-primary);
-      cursor:pointer; transition:all .2s;
-    }
-    .toolbar-btn.icon-only { padding:0.5rem; }
-    .search-input {
-      flex:1; padding:0.5rem; border:1px solid var(--border);
-      border-radius:var(--radius-sm); background:var(--bg-secondary);
-    }
-
-    .main-content { flex:1; display:flex; overflow:hidden; }
-    .notes-sidebar {
-      width:260px; background:var(--bg-secondary);
-      border-right:1px solid var(--border); overflow-y:auto;
-    }
-    .notes-list { padding:1rem; }
-    .note-item {
-      padding:0.75rem; margin-bottom:0.5rem;
-      border-radius:var(--radius-md); background:var(--bg-primary);
-      cursor:pointer; transition:all .2s;
-    }
-    .note-item.active { background:var(--accent); color:#fff; }
-
-    .editor-container { flex:1; display:flex; flex-direction:column; }
-    .editor {
-      flex:1; padding:1.5rem; background:var(--bg-primary);
-      outline:none; overflow-y:auto;
-    }
-    .editor:empty::before {
-      content:attr(data-placeholder); color:var(--text-muted);
-    }
+    /* Main Screen */
+    .main-screen{height:100vh;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;text-align:center;padding:2rem;background:var(--bg-tertiary);}
+    .main-screen h1{font-size:1.75rem;margin-bottom:1rem;color:var(--text-primary);}
+    .main-screen p{color:var(--text-secondary);margin-bottom:2rem;}
+    .main-screen .btn-group{display:flex;flex-direction:column;gap:0.75rem;width:100%;max-width:280px;}
+    .main-screen .btn{padding:0.75rem;background:var(--accent);color:#fff;border:none;
+      border-radius:var(--radius-md);cursor:pointer;font-weight:500;transition:all .2s;}
+    .main-screen .btn:hover{background:var(--accent-hover);}
+    .main-screen .secondary{background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);}
+    .main-screen .secondary:hover{background:var(--bg-primary);}
   </style>
 </head>
 <body>
-  <!-- Onboarding -->
+
+  <!-- Onboarding Modal -->
   <div id="onboarding" class="modal">
     <div class="modal-container">
       <h2 id="formTitle">Anmelden</h2>
-      <p class="form-switch-text" id="formSwitchText">
-        Noch kein Konto? <a href="#" id="toggleSignup">Registrieren</a>
-      </p>
+      <p class="form-switch-text" id="formSwitchText">Noch kein Konto? <a href="#" id="toggleSignup">Registrieren</a></p>
       <div class="social-btns">
         <button class="social-btn google" id="googleLogin">
-          <span class="material-icons">google</span>
-          Mit Google anmelden
+          <span class="material-icons">google</span> Mit Google anmelden
         </button>
       </div>
       <div class="separator"><span>ODER</span></div>
@@ -171,53 +103,36 @@
     </div>
   </div>
 
-  <!-- Haupt-App -->
-  <div id="app" class="app-container hidden">
-    <header class="toolbar">
-      <button class="toolbar-btn" onclick="newNote()">
-        <span class="material-icons">add</span>Neue Notiz
-      </button>
-      <button class="toolbar-btn icon-only" onclick="format('bold')" title="Fett">
-        <span class="material-icons">format_bold</span>
-      </button>
-      <button class="toolbar-btn icon-only" onclick="format('italic')" title="Kursiv">
-        <span class="material-icons">format_italic</span>
-      </button>
-      <button class="toolbar-btn icon-only" onclick="format('underline')" title="Unterstrichen">
-        <span class="material-icons">format_underlined</span>
-      </button>
-      <button class="toolbar-btn icon-only" onclick="insertChecklist()" title="Checkliste">
-        <span class="material-icons">checklist</span>
-      </button>
-      <button class="toolbar-btn icon-only" onclick="attachImage()" title="Bild einfügen">
-        <span class="material-icons">image</span>
-      </button>
-      <input type="text" id="searchInput" class="search-input" placeholder="Notizen durchsuchen…" oninput="searchNotes(this.value)">
-      <button class="toolbar-btn icon-only" id="themeBtn" onclick="toggleTheme()" title="Design wechseln">🌙</button>
-      <button class="toolbar-btn" onclick="signOutUser()">
-        <span class="material-icons">logout</span>Abmelden
-      </button>
-    </header>
-    <div class="main-content">
-      <aside class="notes-sidebar"><div id="notesList" class="notes-list"></div></aside>
-      <div class="editor-container">
-        <main id="editor" class="editor" contenteditable="true" data-placeholder="Beginne mit dem Schreiben…"></main>
-      </div>
+  <!-- Main Screen -->
+  <div id="mainScreen" class="main-screen hidden">
+    <h1>Erfolgreich eingeloggt!</h1>
+    <p>Du bist jetzt angemeldet als <span id="userEmail"></span>.</p>
+    <div class="btn-group">
+      <button class="btn" onclick="signOutUser()">Ausloggen</button>
+      <button class="btn secondary" onclick="showEmailChange()">E‑Mail ändern</button>
+      <button class="btn secondary" onclick="showPasswordChange()">Passwort ändern</button>
+    </div>
+    <div id="emailChange" class="btn-group hidden" style="margin-top:1.5rem;">
+      <input type="email" id="newEmail" class="form-input" placeholder="Neue E‑Mail">
+      <button class="btn" onclick="changeEmail()">E‑Mail speichern</button>
+    </div>
+    <div id="pwChange" class="btn-group hidden" style="margin-top:1.5rem;">
+      <input type="password" id="newPassword" class="form-input" placeholder="Neues Passwort">
+      <button class="btn" onclick="changePassword()">Passwort speichern</button>
     </div>
   </div>
 
-  <!-- Firebase & App-Logic -->
+  <!-- Firebase & App Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import {
       getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
       signInWithPopup, GoogleAuthProvider,
-      onAuthStateChanged, sendPasswordResetEmail, signOut
+      onAuthStateChanged, sendPasswordResetEmail, signOut,
+      updateEmail, updatePassword
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import {
-      getFirestore, collection, doc, addDoc, onSnapshot,
-      updateDoc, serverTimestamp, enableIndexedDbPersistence,
-      query, orderBy
+      getFirestore, enableIndexedDbPersistence
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     // Deine Firebase‑Config
@@ -230,177 +145,126 @@
       appId: "1:271163999689:web:4e7f1fb206bee80702d418",
       measurementId: "G-92MHTP7HMB"
     };
+    initializeApp(firebaseConfig);
+    const auth = getAuth();
+    enableIndexedDbPersistence(getFirestore()).catch(e=>console.warn(e.code));
 
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
-    enableIndexedDbPersistence(db).catch(e=>console.warn(e.code));
+    // UI‑Refs
+    const onboarding   = document.getElementById('onboarding');
+    const mainScreen   = document.getElementById('mainScreen');
+    const emailLabel   = document.getElementById('userEmail');
+    const emailChange  = document.getElementById('emailChange');
+    const pwChange     = document.getElementById('pwChange');
 
-    // UI-Refs
-    const onboarding      = document.getElementById('onboarding');
-    const appContainer    = document.getElementById('app');
-    const toggleSignupEl  = document.getElementById('toggleSignup');
-    const googleLoginBtn  = document.getElementById('googleLogin');
-    const authForm        = document.getElementById('authForm');
-    const submitBtn       = document.getElementById('submitBtn');
-    const forgotEl        = document.getElementById('forgotPassword');
-    const themeToggleEl   = document.getElementById('themeToggle');
-    const newNoteBtn      = document.querySelector('button[onclick="newNote()"]');
-    const editor          = document.getElementById('editor');
-    const notesList       = document.getElementById('notesList');
-
-    let isSignup=false, notes=[], activeNoteId=null, saveTimeout;
-
-    // Theme init
-    function initTheme(){
-      const saved=localStorage.getItem('theme')||'light';
-      document.documentElement.dataset.theme=saved;
-    }
-
-    function toggleTheme(){
-      const html=document.documentElement;
-      const next=html.dataset.theme==='light'?'dark':'light';
-      html.dataset.theme=next;
-      localStorage.setItem('theme',next);
-    }
-
-    // Auth state
-    onAuthStateChanged(auth,user=>{
-      if(user){
+    // Login‑State
+    onAuthStateChanged(auth, user => {
+      if (user) {
         onboarding.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-        startNotesListener(user.uid);
+        mainScreen.classList.remove('hidden');
+        emailLabel.textContent = user.email;
       } else {
         onboarding.classList.remove('hidden');
-        appContainer.classList.add('hidden');
+        mainScreen.classList.add('hidden');
       }
     });
 
     // Events
-    toggleSignupEl.addEventListener('click',toggleSignup);
-    googleLoginBtn.addEventListener('click', signInWithGoogle);
-    authForm.addEventListener('submit', handleAuth);
-    forgotEl.addEventListener('click', forgotPassword);
-    themeToggleEl.addEventListener('click', toggleTheme);
+    document.getElementById('toggleSignup').onclick = toggleSignup;
+    document.getElementById('googleLogin').onclick   = signInWithGoogle;
+    document.getElementById('authForm') .onsubmit    = handleAuth;
+    document.getElementById('forgotPassword').onclick= forgotPassword;
+    document.getElementById('togglePassword') .onclick=togglePassword;
+    document.getElementById('themeToggle')  .onclick = toggleTheme;
 
-    // Auth logic
+    // Auth‑Flows
     async function handleAuth(e){
       e.preventDefault();
-      const email=authForm.email.value.trim();
-      const pw=authForm.password.value;
-      if(!email||!pw){ alert('Bitte ausfüllen'); return; }
-      submitBtn.disabled=true;
-      const orig=submitBtn.textContent; submitBtn.textContent='…';
-      try{
-        if(isSignup) await createUserWithEmailAndPassword(auth,email,pw);
-        else         await signInWithEmailAndPassword(auth,email,pw);
-      }catch(err){
+      const email = e.target.email.value.trim();
+      const pw    = e.target.password.value;
+      if (!email || !pw) { alert('Bitte Felder ausfüllen'); return; }
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      const orig = btn.textContent; btn.textContent = '…';
+      try {
+        if (isSignup) await createUserWithEmailAndPassword(auth,email,pw);
+        else          await signInWithEmailAndPassword(auth,email,pw);
+      } catch(err) {
         alert(err.message);
-      }finally{
-        submitBtn.disabled=false; submitBtn.textContent=orig;
+      } finally {
+        btn.disabled = false; btn.textContent = orig;
       }
     }
-
     function toggleSignup(){
-      isSignup=!isSignup;
-      submitBtn.textContent=isSignup?'Registrieren':'Anmelden';
-      document.getElementById('formTitle').textContent=isSignup?'Registrieren':'Anmelden';
-      document.getElementById('formSwitchText').innerHTML=isSignup
-        ?'Bereits ein Konto? <a href="#" id="toggleSignup">Anmelden</a>'
-        :'Noch kein Konto? <a href="#" id="toggleSignup">Registrieren</a>';
-      document.getElementById('toggleSignup').addEventListener('click',toggleSignup);
+      isSignup = !isSignup;
+      document.getElementById('formTitle').textContent = isSignup ? 'Registrieren' : 'Anmelden';
+      document.getElementById('submitBtn').textContent = isSignup ? 'Registrieren' : 'Anmelden';
+      document.getElementById('formSwitchText').innerHTML = isSignup
+        ? 'Bereits ein Konto? <a href="#" id="toggleSignup">Anmelden</a>'
+        : 'Noch kein Konto? <a href="#" id="toggleSignup">Registrieren</a>';
+      document.getElementById('toggleSignup').onclick = toggleSignup;
     }
-
-    function forgotPassword(e){
-      e.preventDefault();
-      const email=authForm.email.value.trim();
-      if(!email){ alert('E‑Mail fehlt'); return; }
-      sendPasswordResetEmail(auth,email).then(()=>alert('Reset‑Mail gesendet'));
-    }
-
     function signInWithGoogle(){
-      const p=new GoogleAuthProvider();
+      const p = new GoogleAuthProvider();
       p.addScope('email'); p.addScope('profile');
       signInWithPopup(auth,p).catch(e=>alert(e.message));
     }
+    function forgotPassword(e){
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      if (!email){ alert('E‑Mail fehlt'); return; }
+      sendPasswordResetEmail(auth,email).then(()=>alert('Reset‑Mail gesendet'));
+    }
+    function signOutUser(){ signOut(auth); }
 
-    function signOutUser(){
-      signOut(auth);
+    // E‑Mail/Passwort ändern
+    function showEmailChange(){
+      pwChange.classList.add('hidden');
+      emailChange.classList.toggle('hidden');
+    }
+    async function changeEmail(){
+      const newEmail = document.getElementById('newEmail').value.trim();
+      if (!newEmail){ alert('Neue E‑Mail eingeben'); return; }
+      try {
+        await updateEmail(auth.currentUser,newEmail);
+        alert('E‑Mail aktualisiert');
+        document.getElementById('userEmail').textContent = newEmail;
+        emailChange.classList.add('hidden');
+      } catch(err) {
+        alert('Fehler: '+err.message);
+      }
+    }
+    function showPasswordChange(){
+      emailChange.classList.add('hidden');
+      pwChange.classList.toggle('hidden');
+    }
+    async function changePassword(){
+      const newPw = document.getElementById('newPassword').value;
+      if (!newPw){ alert('Neues Passwort eingeben'); return; }
+      try {
+        await updatePassword(auth.currentUser,newPw);
+        alert('Passwort geändert');
+        pwChange.classList.add('hidden');
+      } catch(err) {
+        alert('Fehler: '+err.message);
+      }
     }
 
-    // Notes logic
-    function startNotesListener(uid){
-      const col=collection(db,`users/${uid}/notes`);
-      const q=query(col,orderBy('updatedAt','desc'));
-      onSnapshot(q,snap=>{
-        notes=snap.docs.map(d=>({id:d.id,...d.data()}));
-        renderNotes();
-      });
+    // Passwort‑Toggle & Theme
+    function togglePassword(){
+      const pw = document.getElementById('password');
+      const btn= document.getElementById('togglePassword');
+      if (pw.type==='password'){ pw.type='text'; btn.textContent='Verbergen'; }
+      else { pw.type='password'; btn.textContent='Anzeigen'; }
+    }
+    function toggleTheme(){
+      const html = document.documentElement;
+      const next = html.dataset.theme==='light'?'dark':'light';
+      html.dataset.theme = next;
+      localStorage.setItem('theme',next);
     }
 
-    async function newNote(){
-      if(!auth.currentUser) return;
-      const r=await addDoc(collection(db,`users/${auth.currentUser.uid}/notes`),{
-        content:'',createdAt:serverTimestamp(),updatedAt:serverTimestamp()
-      });
-      selectNote(r.id);
-    }
-
-    function renderNotes(){
-      notesList.innerHTML='';
-      notes.forEach(n=>{
-        const el=document.createElement('div');
-        el.className='note-item'+(n.id===activeNoteId?' active':'');
-        el.onclick=()=>selectNote(n.id);
-        el.textContent = n.content.slice(0,20) || 'Neue Notiz';
-        notesList.appendChild(el);
-      });
-    }
-
-    async function selectNote(id){
-      activeNoteId=id;
-      const n=notes.find(x=>x.id===id);
-      editor.innerHTML=n.content||'';
-      renderNotes();
-      editor.focus();
-    }
-
-    function scheduleSave(){ clearTimeout(saveTimeout); saveTimeout=setTimeout(saveCurrent,800); }
-    async function saveCurrent(){
-      if(!activeNoteId) return;
-      await updateDoc(doc(db,`users/${auth.currentUser.uid}/notes/${activeNoteId}`),{
-        content:editor.innerHTML, updatedAt:serverTimestamp()
-      });
-    }
-
-    // Editor helpers
-    function format(cmd){ document.execCommand(cmd,false,null); scheduleSave(); }
-    function insertChecklist(){ document.execCommand('insertHTML',false,'<div contenteditable="false">☐  </div>'); scheduleSave(); }
-    function attachImage(){
-      const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*';
-      inp.onchange=e=>{
-        const f=e.target.files[0]; if(!f) return;
-        const r=new FileReader(); r.onload=ev=>{
-          document.execCommand('insertImage',false,ev.target.result); scheduleSave();
-        }; r.readAsDataURL(f);
-      }; inp.click();
-    }
-    function searchNotes(q){
-      notesList.querySelectorAll('.note-item').forEach(el=>{
-        el.style.display = el.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
-      });
-    }
-    function handleShortcuts(e){
-      if((e.metaKey||e.ctrlKey)&&e.key==='s'){ e.preventDefault(); saveCurrent(); }
-      if((e.metaKey||e.ctrlKey)&&e.key==='b'){ e.preventDefault(); format('bold'); }
-      if((e.metaKey||e.ctrlKey)&&e.key==='i'){ e.preventDefault(); format('italic'); }
-    }
-
-    // Global bindings for onclick
-    window.newNote = newNote;
-    window.signOutUser = signOutUser;
-
-    // Initialize theme
+    // Init
+    let isSignup = false;
     initTheme();
   </script>
 </body>
