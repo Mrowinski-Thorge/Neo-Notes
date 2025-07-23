@@ -1,219 +1,63 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>NeoDev Notes</title>
-<style>
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: linear-gradient(180deg,#f9f9f9,#eaeaea);
-    margin:0; padding:0;
-  }
-  .container {
-    max-width:420px; margin:50px auto; background:#fff;
-    border-radius:20px; padding:30px; box-shadow:0 10px 30px rgba(0,0,0,0.1);
-  }
-  h1 {text-align:center;font-weight:700;font-size:1.8em;margin-bottom:30px;}
-  h2 {margin-top:20px;font-size:1.3em;}
-  input,textarea {
-    width:100%;padding:12px;border-radius:12px;border:1px solid #ccc;
-    margin:10px 0;font-size:16px;outline:none;transition:border 0.3s;
-  }
-  input:focus,textarea:focus {border:1px solid #007aff;}
-  button {
-    width:100%;padding:12px;margin:8px 0;font-size:16px;border:none;
-    border-radius:12px;cursor:pointer;font-weight:600;transition:all 0.3s;
-  }
-  .primary-btn {background:#007aff;color:#fff;}
-  .primary-btn:hover {background:#0056d2;}
-  .secondary-btn {background:#f2f2f2;color:#333;}
-  .secondary-btn:hover {background:#e0e0e0;}
-  .note-card {
-    background:#f8f8f8;border-radius:12px;padding:12px;margin:8px 0;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .note-card h3 {margin:0;font-size:1em;font-weight:600;}
-  .note-card p {margin:0;font-size:0.9em;color:#666;}
-  .note-card button {
-    background:#ff3b30;color:#fff;width:auto;padding:6px 12px;
-  }
-  .hidden{display:none;}
-  .small-link{
-    display:block;text-align:right;font-size:0.9em;margin-top:4px;
-    color:#007aff;cursor:pointer;text-decoration:underline;
-  }
-  .center{text-align:center;}
-  .title-input {font-weight:600;}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Neo Notes</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="container" id="authContainer">
-  <h1>NeoDev Notes</h1>
-  <input id="email" type="email" placeholder="E‑Mail">
-  <input id="password" type="password" placeholder="Passwort">
-  <button id="signInBtn" class="primary-btn">Anmelden</button>
-  <button id="signUpBtn" class="secondary-btn">Registrieren</button>
-  <div class="small-link" id="resetBtn">Passwort vergessen?</div>
-  <hr style="margin:20px 0;">
-  <button id="googleBtn" class="secondary-btn">Mit Google anmelden</button>
-  <hr style="margin:20px 0;">
-  <input id="phoneNumber" type="text" placeholder="📱 +49 170 1234567">
-  <button id="phoneLoginBtn" class="secondary-btn">SMS-Code anfordern</button>
-  <input id="smsCode" type="text" placeholder="SMS‑Code eingeben">
-  <button id="confirmCodeBtn" class="primary-btn">Code bestätigen</button>
-</div>
+  <!-- Onboarding Modal -->
+  <div id="onboarding" class="modal">
+    <div class="modal-container">
+      <button class="modal-close" onclick="closeOnboarding()">✕</button>
+      <h2 id="formTitle">Log in</h2>
+      <p id="formSwitchText">
+        Don’t have an account? <a href="#" onclick="toggleSignup()">Sign up</a>
+      </p>
+      <div class="social-btns">
+        <button onclick="signInWithGoogle()">
+          <i class="fab fa-google"></i> Log in with Google
+        </button>
+        <button onclick="signInWithApple()">
+          <i class="fab fa-apple"></i> Sign in with Apple
+        </button>
+      </div>
+      <div class="separator"><span>OR</span></div>
+      <form id="authForm" onsubmit="handleAuth(event)">
+        <input type="email" id="email" placeholder="Your email" required />
+        <div class="pwd-wrapper">
+          <input type="password" id="password" placeholder="Your password" required />
+          <button type="button" class="pwd-toggle" onclick="togglePassword()">Show</button>
+        </div>
+        <a href="#" class="forgot" onclick="forgotPassword()">Forget your password</a>
+        <button type="submit" class="primary-btn" id="submitBtn">Log in</button>
+      </form>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </div>
 
-<div class="container hidden" id="verifyContainer">
-  <h2>📩 Bitte bestätige deine E‑Mail</h2>
-  <p class="center">Wir haben dir eine Bestätigungsmail geschickt.<br>Erst danach kannst du loslegen.</p>
-  <button id="resendBtn" class="secondary-btn">Bestätigungsmail erneut senden</button>
-  <button id="logoutBtn2" class="primary-btn">Logout</button>
-</div>
+  <!-- App Container -->
+  <div id="app" class="hidden">
+    <header class="toolbar">
+      <button onclick="newNote()">✚ New Note</button>
+      <button onclick="format('bold')">B</button>
+      <button onclick="format('italic')">I</button>
+      <button onclick="insertChecklist()">☑</button>
+      <button onclick="attachImage()">📎</button>
+      <input type="text" id="search" placeholder="Search notes…" oninput="searchNotes(this.value)" />
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+      <button onclick="signOut()">🔓 Log out</button>
+    </header>
+    <aside id="notesList" class="notes-list"></aside>
+    <main id="editor" class="editor" contenteditable="true" data-placeholder="Type your note…"></main>
+  </div>
 
-<div class="container hidden" id="notesContainer">
-  <h1>📒 Deine Notizen</h1>
-  <button id="logoutBtn" class="secondary-btn">Logout</button>
-  <h2>Neue Notiz</h2>
-  <input id="noteTitle" class="title-input" type="text" placeholder="Titel">
-  <textarea id="noteContent" rows="3" placeholder="Inhalt..."></textarea>
-  <button id="saveNoteBtn" class="primary-btn">Speichern</button>
-  <h2>Gespeicherte Notizen</h2>
-  <div id="notesList"></div>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import {
-  getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,
-  GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut,
-  sendEmailVerification,sendPasswordResetEmail,
-  RecaptchaVerifier,signInWithPhoneNumber
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-import {
-  getFirestore,collection,addDoc,onSnapshot,deleteDoc,doc
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey:"AIzaSyD8YAkuX6ZlcAEr-5peb_D8fclnsM4Y11o",
-  authDomain:"neodev-notes.firebaseapp.com",
-  projectId:"neodev-notes",
-  storageBucket:"neodev-notes.firebasestorage.app",
-  messagingSenderId:"271163999689",
-  appId:"1:271163999689:web:4e7f1fb206bee80702d418"
-});
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// UI refs
-const authContainer=document.getElementById('authContainer');
-const verifyContainer=document.getElementById('verifyContainer');
-const notesContainer=document.getElementById('notesContainer');
-const email=document.getElementById('email');
-const password=document.getElementById('password');
-const signInBtn=document.getElementById('signInBtn');
-const signUpBtn=document.getElementById('signUpBtn');
-const resetBtn=document.getElementById('resetBtn');
-const googleBtn=document.getElementById('googleBtn');
-const logoutBtn=document.getElementById('logoutBtn');
-const logoutBtn2=document.getElementById('logoutBtn2');
-const resendBtn=document.getElementById('resendBtn');
-const noteTitle=document.getElementById('noteTitle');
-const noteContent=document.getElementById('noteContent');
-const saveNoteBtn=document.getElementById('saveNoteBtn');
-const notesList=document.getElementById('notesList');
-const phoneNumber=document.getElementById('phoneNumber');
-const phoneLoginBtn=document.getElementById('phoneLoginBtn');
-const smsCode=document.getElementById('smsCode');
-const confirmCodeBtn=document.getElementById('confirmCodeBtn');
-
-let unsub=null,confirmationResult=null;
-
-// Auth State
-onAuthStateChanged(auth,user=>{
-  if(user){
-    if(user.emailVerified || user.phoneNumber){
-      authContainer.classList.add('hidden');
-      verifyContainer.classList.add('hidden');
-      notesContainer.classList.remove('hidden');
-      loadNotes(user.uid);
-    } else {
-      authContainer.classList.add('hidden');
-      notesContainer.classList.add('hidden');
-      verifyContainer.classList.remove('hidden');
-    }
-  } else {
-    authContainer.classList.remove('hidden');
-    notesContainer.classList.add('hidden');
-    verifyContainer.classList.add('hidden');
-    notesList.innerHTML='';
-    if(unsub)unsub();
-  }
-});
-
-// Email/Passwort
-signInBtn.onclick=()=>signInWithEmailAndPassword(auth,email.value,password.value).catch(e=>alert(e.message));
-signUpBtn.onclick=()=>{
-  createUserWithEmailAndPassword(auth,email.value,password.value)
-    .then(c=>{
-      sendEmailVerification(c.user).then(()=>{alert("Mail gesendet! Bitte bestätigen.");signOut(auth);});
-    })
-    .catch(e=>alert(e.message));
-};
-resetBtn.onclick=()=>{
-  if(!email.value.trim())return alert("Bitte E-Mail angeben.");
-  sendPasswordResetEmail(auth,email.value.trim())
-    .then(()=>alert("Passwort-Reset-Mail gesendet!"))
-    .catch(e=>alert(e.message));
-};
-googleBtn.onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>alert(e.message));
-logoutBtn.onclick=()=>signOut(auth);
-logoutBtn2.onclick=()=>signOut(auth);
-resendBtn.onclick=()=>{if(auth.currentUser&&!auth.currentUser.emailVerified)sendEmailVerification(auth.currentUser).then(()=>alert("Mail erneut gesendet!"));};
-
-// Notes
-saveNoteBtn.onclick=async()=>{
-  const user=auth.currentUser;
-  if(!user||( !user.emailVerified && !user.phoneNumber))return alert("Nicht verifiziert!");
-  if(!noteTitle.value.trim()||!noteContent.value.trim())return alert("Titel und Inhalt ausfüllen!");
-  await addDoc(collection(db,`users/${user.uid}/notes`),{
-    title:noteTitle.value.trim(),
-    content:noteContent.value.trim(),
-    createdAt:new Date()
-  });
-  noteTitle.value='';noteContent.value='';
-};
-function loadNotes(uid){
-  if(unsub)unsub();
-  unsub=onSnapshot(collection(db,`users/${uid}/notes`),snap=>{
-    notesList.innerHTML='';
-    snap.forEach(docSnap=>{
-      const d=docSnap.data();
-      const div=document.createElement('div');
-      div.className='note-card';
-      div.innerHTML=`<div><h3>${d.title}</h3><p>${d.content}</p></div><button>Löschen</button>`;
-      div.querySelector('button').onclick=()=>deleteDoc(doc(db,`users/${uid}/notes/${docSnap.id}`));
-      notesList.appendChild(div);
-    });
-  });
-}
-
-// Phone
-window.recaptchaVerifier=new RecaptchaVerifier(auth,'phoneLoginBtn',{
-  size:'invisible',
-  callback:()=>{}
-});
-phoneLoginBtn.onclick=()=>{
-  signInWithPhoneNumber(auth,phoneNumber.value.trim(),window.recaptchaVerifier)
-    .then(cr=>{confirmationResult=cr;alert("SMS gesendet! Code eingeben.");})
-    .catch(e=>alert(e.message));
-};
-confirmCodeBtn.onclick=()=>{
-  if(!confirmationResult)return alert("Erst SMS anfordern!");
-  confirmationResult.confirm(smsCode.value.trim())
-    .then(()=>alert("Telefonnummer verifiziert!"))
-    .catch(e=>alert(e.message));
-};
-</script>
+  <!-- Firebase SDK & Icons -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js" type="module"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js" type="module"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" type="module"></script>
+  <script src="https://kit.fontawesome.com/<YOUR-KIT-ID>.js" crossorigin="anonymous"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
